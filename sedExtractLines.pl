@@ -1,6 +1,8 @@
 #!/usr/bin/perl -n
 #!/usr/bin/env perl
 
+# Graciously from: https://www.perlmonks.org/?node_id=1172178
+
 my $usage;
 BEGIN {
     $usage = "Usage: $0 linespec file\n"
@@ -42,3 +44,4 @@ END {
         print $fh $file,"\n";
     }
 }
+__DATA__

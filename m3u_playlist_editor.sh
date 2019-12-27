@@ -114,6 +114,7 @@ for lnum in $(echo "$result"); do
   lastLine=$(echo "$lineBeginnings" | grep -A1 "$lnum" | sed -n '2 p')
   if [ -z "$lastLine" ]; then
       lastLine=$lastlinenum
+      fixLastLineCount=true
   else
       lastLine=$(($lastLine - 1))
   fi
@@ -127,13 +128,15 @@ echo "Saving the result to the file: \"$outputFile\""
 ./sedExtractLines.pl "$argStr" "$inputFile" > "$outputFile"
 
 writtenLines=$(wc -l < "$outputFile")
-# Last line does not contain a new line, so compensate:
-writtenLines="$(($writtenLines + 1))"
+if [ "$fixLastLineCount" ]; then
+  writtenLines="$(($writtenLines + 1))";
+fi
 
 if [ "$writtenLines" = "$totLines" ]; then
     echo "--- All done ($totLines lines was written to \"$outputFile\"), enjoy! ---"
 else
-    echo "--- ERROR: Output file: \"$outputFile\" does not have expected lines in it"
-    echo "--- Please report this issue, to be fixed..."
+    echo "--- WARNING: Output file: \"$outputFile\" does not have expected lines in it."
+    echo "--- Written: $writtenLines ; expected: $totLines"
+    echo "--- Consider reporting this issue, to be fixed..."
     exit 1
 fi

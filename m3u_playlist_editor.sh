@@ -15,13 +15,21 @@ groups="$tmpdir/groups.txt"
 : ${DIALOG_CANCEL=1}
 : ${DIALOG_ESC=255}
 
-#inputFile='./m3u_orig.m3u'
 outputFile='selected_groups_only.m3u'
 
-inputFile=$(dialog --clear --title "File Viewer" --stdout \
-       --backtitle "Space to select file/dir (change directory with space + \"/\"):" \
-       --title "Select m3u input file followed by enter:"\
-       --fselect ./ 24 85)
+if [ "$#" -eq 0 ]; then
+	echo "No input file provided (optionally provide as argument)"
+	#inputFile='./m3u_orig.m3u'
+else
+	inputFile="$1"
+fi
+
+if [ -z "$inputFile" ]; then
+   inputFile=$(dialog --clear --title "File Viewer" --stdout \
+	--backtitle "Space to select file/dir (change directory with space + \"/\"):" \
+	--title "Select m3u input file followed by enter:"\
+	--fselect ./ 24 85)
+fi
 [ -d "$inputFile" ] && {
 	echo "You choose the directory \"$inputFile\", instead of a file.";
 	echo "Please try again (use the spacebar to select a file, then the ENTER-key)...";

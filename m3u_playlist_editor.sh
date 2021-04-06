@@ -45,23 +45,38 @@ fi
 grep -in 'tvg-name' "$inputFile" > "$groups"
 
 
-# Only 1 group that matches the "tvg-name=..."-field
-#grep -Eo1 'tvg-name=\"([^"]*)\"' "$groups" | grep -oP '"\K[^"]+'
+#lineRegExp='^\d+(?=:)' # positive lookahead doesn't seem to work?
+lineRegExp='^([0-9]*)' # <== This is probably always ok, probably don't touch it
+tvgNameRegExp='\"#+ ([^"]*) #+\"' # <== This probably needs to be changed, for different providers!
+together="$lineRegExp:.*$tvgNameRegExp"
 
-# 2 groups, first group to match line number, second is the tvg-name-field: 
-# ^([0-9]*):.*tvg-name=\"▬ ([^"]*) ▬\"
-# --- the following isn't working - but could be needed by other providers ---
-#fullRegxp=$(grep -oP '^([0-9]*):.*tvg-name="(.*\[.+\].*?)"(?= )' "$groups")
-
-# This works with my provider - to find the groups:
-fullRegxp=$(grep -Eo '^([0-9]*):.*tvg-name=\"▬ ([^"]*) ▬\"' "$groups")
+# Find all lines where the combined regexp matches ("together"): 
+#fullRegxp=$(grep -Eo '^([0-9]*):.*tvg-name=\"#+ ([^"]*) #+\"' "$groups")
+#fullRegxp=$(grep -Eo '^\d+(?=:).*tvg-name=\"#+ ([^"]*) #+\"' "$groups")
+#fullRegxp=$(grep -Eo "$together" "$groups")
 #echo "fullRegxp="
 #echo "$fullRegxp"
 
-lines=$(echo "$fullRegxp" | grep -oP '^\d+(?=:)')
-tvgname=$(echo "$fullRegxp" | grep -oP '\"▬ ([^"]*) ▬\"')
+#if fullRegxp=$(grep -Eo "'"$lineRegExp.*$tvgNameRegExp"'" "$groups"); then
+#if fullRegxp=$(grep -Eo "hi" "$groups"); then
+if fullRegxp=$(grep -Eo "$together" "$groups"); then
+  echo "Regular expression for "group"-matching seems valid..."
+else
+  echo "Regular expression seems invalid - check return code and parameters..."
+  exit 1
+fi
 
-# === Verifying the numbers match ===
+lines=$(echo "$fullRegxp" | grep -oP "$lineRegExp")
+tvgname=$(echo "$fullRegxp" | grep -oP "$tvgNameRegExp")
+# For debugging:
+#echo -e "lines=\n$lines"
+#echo -e "\ntvgname=\n$tvgname"
+#exit 0
+
+[ -z "$lines" ] && (echo "No line-markers found: Please fix \"tvgNameRegExp\" - or ensure \"fullRegxp\" finds m3u search groups!"; exit 1)
+    echo -e "lines=\n$lines"
+    echo -e "\ntvgname=\n$tvgname"
+# === Verifying that the numbers match ===
 nlines=$(echo "$lines" | wc -l)
 ntvgname=$(echo "$tvgname" | wc -l)
 if [ "$nlines" != "$ntvgname" ]; then
